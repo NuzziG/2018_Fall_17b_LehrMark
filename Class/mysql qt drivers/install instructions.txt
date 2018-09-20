@@ -1,0 +1,93 @@
+o------------------------------------------------------------------o
+|		Installing mysql driver with premade driver files		   |
+o------------------------------------------------------------------o
+1) Copy qsqlmysql.dll and qsqlmysqld.dll to C:\Qt\5.5\mingw492_32\plugins\sqldrivers
+
+2) Copy libmysql.dll from %mysql%\lib to C:\Windows
+
+
+o------------------------------------------------------------------o
+|					Installing drivers by hand					   |
+o------------------------------------------------------------------o
+1) Open MaintenceTool.exe inside your qt root directory
+
+2) Check add or remove components then click the next button. It will then retrieve meta information from a repository.
+
+3) Click the expand on the most recent qt version (eg Qt 5.5). Look for Source Components inside Qt 5.5 if it is unchecked check it and click next. It will then install
+
+4) Meanwhile download and install MySQL Community Server (E.g. mysql-5.5.46-win32.msi)
+https://dev.mysql.com/downloads/file.php?id=458972
+
+5) Run that and click custom. Then you will then get a menu like this http://seppemagiels.com/sites/default/files/images/Nx120xinstall-mysql.png.pagespeed.ic.wowGkGZ8qi.png
+You can disable the "MySQL Server, Documentation, Server data files" by clicking the dropdown. When finished click next it will then install.
+
+6) Open the qt command prompt
+Start > All Programs > Qt > 5.5 ( or you're most recent version) > QT 5.5 for desktop(MinGw 4.9.2 32 bit)
+
+7) Run the following commands (change file locations according to your environment)
+set mysql=C:\\PROGRA~2\\MySQL\\MYSQLS~1.5
+cd C:\Qt\5.5\Src\qtbase\src\plugins\sqldrivers\mysql
+qmake "INCLUDEPATH+=%mysql%\\include" "LIBS+=%mysql%\\lib\\libmysql.lib" -o Makefile mysql.pro
+mingw32-make
+
+8) Copy qsqlmysql.dll and qsqlmysqld.dll from C:\Qt\5.5\Src\qtbase\plugins\sqldrivers to C:\Qt\5.5\mingw492_32\plugins\sqldrivers
+
+9) Copy libmysql.dll from C:\PROGRA~2\MySQL\MYSQLS~1.5\lib to C:\Windows
+
+
+Finished
+That's all, but don't forget to add QT += sql to your project file, else it won't work. To check which drivers are available run this program.
+
+#include <QApplication>
+#include <QDebug>
+#include <QSql>
+#include <QSqlQuery>
+#include <QSqlDatabase>
+struct Connection{
+    QSqlDatabase db;
+    bool connected;
+};
+Connection createConnection();
+int main(int argc, char *argv[]){
+    QApplication a(argc, argv);
+    Connection connection = createConnection();
+    if ( !connection.connected ){
+        qDebug() << "Not connected!";
+        return 1;
+    }
+    else{
+        qDebug() << "Connected!";
+        QSqlQuery query;
+        query.exec("SELECT name FROM testing");
+        while (query.next()) {
+            QString name = query.value(0).toString();
+            qDebug() << "name:" << name;
+        }
+        connection.db.close();
+        return 0;
+    }
+    return a.exec();
+}
+Connection createConnection(){
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("209.129.8.7");
+    db.setDatabaseName("48037");
+    db.setUserName("48037");
+    db.setPassword("48037cis17b");
+    Connection connection;
+    connection.db = db;
+    if (!db.open()) {
+        qDebug() << "Database error occurred";
+        connection.connected = false;
+        return connection;
+    }
+    connection.connected = true;
+
+    return connection;
+}
+
+
+
+
+orignal instructions
+http://seppemagiels.com/blog/create-mysql-driver-qt5-windows
